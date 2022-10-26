@@ -1,7 +1,6 @@
 package org.example;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Librarian {
     private String name;
@@ -26,56 +25,48 @@ public class Librarian {
 
     }
 
-    public void borrowBookFCFS(Book book, List<Members> wantBooks) {
-        for(int i=0; i<wantBooks.size();i++){
-            if(book.getNumberOfBooksInStorage()>0){
-                if(wantBooks.get(i) instanceof Teacher){
-                    System.out.println("Borrowing book: "+book.getName()+ " to a teacher "+wantBooks.get(i).getName());
-                } else if( wantBooks.get(i) instanceof SeniorStudent){
-                    System.out.println("Borrowing book: "+book.getName()+ " to a senior "+wantBooks.get(i).getName());
-                } else if (wantBooks.get(i) instanceof  JuniorStudent){
-                    System.out.println("Borrowing book: "+book.getName()+ " to a junior "+wantBooks.get(i).getName());
-                }
-                wantBooks.get(i).listOfBooksInPossession.add(book);
-                book.setNumberOfBooksInStorage(book.getNumberOfBooksInStorage()-1);
-            }else{
-                System.out.println("This book is currently unavailbale, book taken");
+    public void borrowBookFCFS(Queue<Members> wantBooks) {
+        int counter = wantBooks.size();
+        for(int i=0; i<counter;i++){
+            Members order = wantBooks.poll();
+            Book bookToBorrow = order.getBookToBorrow();
+            if (order.getBookToBorrow().getNumberOfBooksInStorage()>0){
+                System.out.println("Borrowing book "+bookToBorrow.getName()+" to " + order.getName());
+                order.listOfBooksInPossession.add(bookToBorrow);
+                bookToBorrow.setNumberOfBooksInStorage(bookToBorrow.getNumberOfBooksInStorage()-1);
+            } else {
+                System.out.println("Book unavailable");
             }
         }
     }
+
 
     public void borrowBookPriority(Book book, List<Members> wantBooks) {
-        List<Members> priorityList = new ArrayList<>();
-        for(int i=0;i<wantBooks.size();i++){
-            if(wantBooks.get(i) instanceof Teacher){
-                priorityList.add(wantBooks.get(i));
+        Queue<Members> priorityList = new PriorityQueue<>(new customComparator());
+        int counter = wantBooks.size();
+        for(int i = 0; i<counter;i++){
+            priorityList.add(wantBooks.get(i));
+        }
+        for(int i = 0; i<counter;i++){
+            Members order = priorityList.poll();
+            Book bookToBorrow = order.getBookToBorrow();
+            if(order.getBookToBorrow().getNumberOfBooksInStorage()>0){
+                System.out.println("Borrowing book "+bookToBorrow.getName()+" to " + order.getName());
+                order.listOfBooksInPossession.add(bookToBorrow);
+                bookToBorrow.setNumberOfBooksInStorage(bookToBorrow.getNumberOfBooksInStorage()-1);
+            } else {
+                System.out.println("Book unavailbale");
             }
         }
-        for(int i=0;i<wantBooks.size();i++){
-            if(wantBooks.get(i) instanceof SeniorStudent){
-                priorityList.add(wantBooks.get(i));
-            }
-        }
-        for(int i=0;i<wantBooks.size();i++){
-            if(wantBooks.get(i) instanceof JuniorStudent){
-                priorityList.add(wantBooks.get(i));
-            }
-        }
-        for(int i=0; i<priorityList.size();i++){
-            if(book.getNumberOfBooksInStorage()>0){
-                if(priorityList.get(i) instanceof Teacher){
-                    System.out.println("Borrowing book: "+book.getName()+ " to a teacher "+priorityList.get(i).getName());
-                } else if( priorityList.get(i) instanceof SeniorStudent){
-                    System.out.println("Borrowing book: "+book.getName()+ " to a senior "+priorityList.get(i).getName());
-                } else if (priorityList.get(i) instanceof  JuniorStudent){
-                    System.out.println("Borrowing book: "+book.getName()+ " to a junior "+priorityList.get(i).getName());
-                }
-                priorityList.get(i).listOfBooksInPossession.add(book);
-                book.setNumberOfBooksInStorage(book.getNumberOfBooksInStorage()-1);
-            }else{
-                System.out.println("This book is currently unavailbale, book taken");
-            }
-        }
-
     }
+    static class customComparator implements Comparator<Members>{
+        @Override
+        public int compare(Members o1, Members o2){
+            if (o1.getBookToBorrow()==o2.getBookToBorrow()){
+                return o1.getPriority()> o2.getPriority()?1:-1;
+            }
+            return 1;
+        }
+    }
+
 }
